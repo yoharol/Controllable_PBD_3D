@@ -1,0 +1,214 @@
+#usda 1.0
+(
+    defaultPrim = "root"
+    endTimeCode = 240
+    startTimeCode = 1
+    timeCodesPerSecond = 60
+    upAxis = "Y"
+)
+
+def Xform "root"
+{
+    def Xform "cage_points"
+    {
+        def Sphere "point0"
+        {
+            color3f[] primvars:displayColor = [(0, 1, 0)]
+            double radius = 0.05
+            double3 xformOp:translate = (0, 0, 0)
+            uniform token[] xformOpOrder = ["xformOp:translate"]
+        }
+
+        def Sphere "point1"
+        {
+            color3f[] primvars:displayColor = [(0, 1, 0)]
+            double radius = 0.05
+            double3 xformOp:translate = (0, 0, 1)
+            uniform token[] xformOpOrder = ["xformOp:translate"]
+        }
+
+        def Sphere "point2"
+        {
+            color3f[] primvars:displayColor = [(0, 1, 0)]
+            double radius = 0.05
+            double3 xformOp:translate = (0, 1, 0)
+            uniform token[] xformOpOrder = ["xformOp:translate"]
+        }
+
+        def Sphere "point3"
+        {
+            color3f[] primvars:displayColor = [(1, 0, 0)]
+            double radius = 0.05
+            double3 xformOp:translate = (0, 1, 1)
+            uniform token[] xformOpOrder = ["xformOp:translate"]
+        }
+
+        def Sphere "point4"
+        {
+            color3f[] primvars:displayColor = [(0, 1, 0)]
+            double radius = 0.05
+            double3 xformOp:translate = (1, 0, 0)
+            uniform token[] xformOpOrder = ["xformOp:translate"]
+        }
+
+        def Sphere "point5"
+        {
+            color3f[] primvars:displayColor = [(0, 1, 0)]
+            double radius = 0.05
+            double3 xformOp:translate = (1, 0, 1)
+            uniform token[] xformOpOrder = ["xformOp:translate"]
+        }
+
+        def Sphere "point6"
+        {
+            color3f[] primvars:displayColor = [(1, 0, 0)]
+            double radius = 0.05
+            double3 xformOp:translate = (1, 1, 0)
+            uniform token[] xformOpOrder = ["xformOp:translate"]
+        }
+
+        def Sphere "point7"
+        {
+            color3f[] primvars:displayColor = [(0, 1, 0)]
+            double radius = 0.05
+            double3 xformOp:translate = (1, 1, 1)
+            uniform token[] xformOpOrder = ["xformOp:translate"]
+        }
+    }
+
+    def Xform "cage_edges"
+    {
+        def BasisCurves "line0"
+        {
+            int[] curveVertexCounts = [2]
+            point3f[] points = [(0, 0, 0), (0, 0, 1)]
+            color3f[] primvars:displayColor = [(0, 1, 1)]
+            uniform token type = "linear"
+            float[] widths = [0.025] (
+                interpolation = "constant"
+            )
+        }
+
+        def BasisCurves "line1"
+        {
+            int[] curveVertexCounts = [2]
+            point3f[] points = [(0, 0, 0), (0, 1, 0)]
+            color3f[] primvars:displayColor = [(0, 1, 1)]
+            uniform token type = "linear"
+            float[] widths = [0.025] (
+                interpolation = "constant"
+            )
+        }
+
+        def BasisCurves "line2"
+        {
+            int[] curveVertexCounts = [2]
+            point3f[] points = [(0, 0, 1), (0, 1, 1)]
+            color3f[] primvars:displayColor = [(0, 1, 1)]
+            uniform token type = "linear"
+            float[] widths = [0.025] (
+                interpolation = "constant"
+            )
+        }
+
+        def BasisCurves "line3"
+        {
+            int[] curveVertexCounts = [2]
+            point3f[] points = [(0, 1, 0), (0, 1, 1)]
+            color3f[] primvars:displayColor = [(0, 1, 1)]
+            uniform token type = "linear"
+            float[] widths = [0.025] (
+                interpolation = "constant"
+            )
+        }
+
+        def BasisCurves "line4"
+        {
+            int[] curveVertexCounts = [2]
+            point3f[] points = [(0, 0, 0), (1, 0, 0)]
+            color3f[] primvars:displayColor = [(0, 1, 1)]
+            uniform token type = "linear"
+            float[] widths = [0.025] (
+                interpolation = "constant"
+            )
+        }
+
+        def BasisCurves "line5"
+        {
+            int[] curveVertexCounts = [2]
+            point3f[] points = [(0, 0, 1), (1, 0, 1)]
+            color3f[] primvars:displayColor = [(0, 1, 1)]
+            uniform token type = "linear"
+            float[] widths = [0.025] (
+                interpolation = "constant"
+            )
+        }
+
+        def BasisCurves "line6"
+        {
+            int[] curveVertexCounts = [2]
+            point3f[] points = [(1, 0, 0), (1, 0, 1)]
+            color3f[] primvars:displayColor = [(0, 1, 1)]
+            uniform token type = "linear"
+            float[] widths = [0.025] (
+                interpolation = "constant"
+            )
+        }
+
+        def BasisCurves "line7"
+        {
+            int[] curveVertexCounts = [2]
+            point3f[] points = [(0, 1, 0), (1, 1, 0)]
+            color3f[] primvars:displayColor = [(0, 1, 1)]
+            uniform token type = "linear"
+            float[] widths = [0.025] (
+                interpolation = "constant"
+            )
+        }
+
+        def BasisCurves "line8"
+        {
+            int[] curveVertexCounts = [2]
+            point3f[] points = [(1, 0, 0), (1, 1, 0)]
+            color3f[] primvars:displayColor = [(0, 1, 1)]
+            uniform token type = "linear"
+            float[] widths = [0.025] (
+                interpolation = "constant"
+            )
+        }
+
+        def BasisCurves "line9"
+        {
+            int[] curveVertexCounts = [2]
+            point3f[] points = [(0, 1, 1), (1, 1, 1)]
+            color3f[] primvars:displayColor = [(0, 1, 1)]
+            uniform token type = "linear"
+            float[] widths = [0.025] (
+                interpolation = "constant"
+            )
+        }
+
+        def BasisCurves "line10"
+        {
+            int[] curveVertexCounts = [2]
+            point3f[] points = [(1, 0, 1), (1, 1, 1)]
+            color3f[] primvars:displayColor = [(0, 1, 1)]
+            uniform token type = "linear"
+            float[] widths = [0.025] (
+                interpolation = "constant"
+            )
+        }
+
+        def BasisCurves "line11"
+        {
+            int[] curveVertexCounts = [2]
+            point3f[] points = [(1, 1, 0), (1, 1, 1)]
+            color3f[] primvars:displayColor = [(0, 1, 1)]
+            uniform token type = "linear"
+            float[] widths = [0.025] (
+                interpolation = "constant"
+            )
+        }
+    }
+}
+
