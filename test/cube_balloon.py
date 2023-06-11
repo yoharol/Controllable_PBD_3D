@@ -108,7 +108,7 @@ pbd.init_rest_status(0)
 # ========================== user input ==========================
 import math
 
-written = [False]
+written = [True]
 
 
 def set_movement():
@@ -132,7 +132,7 @@ def set_movement():
 
 
 # ========================== USD ==========================
-save_usd = True
+save_usd = False
 if save_usd:
   stage = usd_render.UsdRender('out/cube_balloon.usdc',
                                startTimeCode=1,
@@ -168,6 +168,7 @@ t_total = 0.0
 
 while window.running():
 
+  t = time.time()
   set_movement()
 
   for i in range(substeps):
@@ -176,12 +177,13 @@ while window.running():
     pbd.preupdate_cons(1)
     for j in range(subsub):
       pbd.update_cons(0)
-    t = time.time()
     cage_ik.ik()
     pbd.update_cons(1)
-    t_total += time.time() - t
     lbs.linear_blend_skinning()
     pbd.update_vel()
+  t_total += time.time() - t
+  if window.get_total_frames() == 480:
+    print(f'average time: {t_total / 480}')
 
   if save_usd:
     update_usd(window.get_total_frames())
