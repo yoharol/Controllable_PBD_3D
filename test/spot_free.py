@@ -2,7 +2,7 @@ import taichi as ti
 import numpy as np
 
 from interface import render_funcs, mesh_render_3d
-from data import tet_data, lbs_data, points_data
+from data import tet_data, points_data
 from cons import deform3d, framework
 import compdyn.base, compdyn.inverse, compdyn.IK
 from utils import objs
@@ -17,22 +17,22 @@ tgf_path = f'assets/{modelname}/{modelname}.tgf'
 model_path = f'assets/{modelname}/{modelname}.mesh'
 weight_path = f'assets/{modelname}/{modelname}_w.txt'
 scale = 1.0
-repose = (0.0, 1.7, 0.0)
+repose = (0.0, 0.7, 0.0)
 
 points = points_data.load_points_data(tgf_path, weight_path, scale, repose)
 mesh = tet_data.load_tets(model_path, scale, repose)
 wireframe = [True]
-fixed = []
+fixed = [0, 1, 2, 3, 7]
 points.set_color(fixed=fixed)
 
 # ========================== init simulation ==========================
-g = ti.Vector([0.0, -3.0, 0.0])
+g = ti.Vector([0.0, 0.0, 0.0])
 fps = 60
 substeps = 5
 subsub = 1
 dt = 1.0 / fps / substeps
 
-pbd = framework.pbd_framework(mesh.v_p, g, dt, damp=0.999)
+pbd = framework.pbd_framework(mesh.v_p, g, dt, damp=0.993)
 deform = deform3d.Deform3D(v_p=mesh.v_p,
                            v_p_ref=mesh.v_p_ref,
                            v_invm=mesh.v_invm,
@@ -93,7 +93,7 @@ def set_movement():
   p_input = points_ik.c_p_ref.to_numpy()
   if t > 0.0:
     idx1 = 7
-    p_input[idx1] += np.array([1.0, 1.0, -1.0], dtype=np.float32) * math.sin(
+    p_input[idx1] += np.array([2.0, 0.0, 0.0], dtype=np.float32) * math.sin(
         0.5 * t * (2.0 * math.pi)) * 0.25
   #p_input[2] = p[2] + np.array([-1.0, 0.0, 1.0], dtype=np.float32) * math.sin(
   #    0.5 * t * (2.0 * math.pi)) * 0.5
