@@ -20,13 +20,15 @@ weight_path = f'assets/{modelname}/{modelname}_w.txt'
 scale = 1.0
 repose = (0.0, 0.0, 0.0)
 
+fixed = [0, 1, 4, 2, 5, 7]
+
 cage = cage_data.load_cage_data(tgf_path, weight_path, scale, repose)
-cage.set_color(fixed=[0, 1, 4, 2, 5, 7])
+cage.set_color(fixed=fixed)
 mesh = cloth_data.load_cloth_mesh(model_path, scale, repose)
-lbs = lbs_data.LBS3D(v_p_ref=mesh.v_p_ref,
-                     c_p=cage.c_p,
-                     c_p_ref=cage.c_p_ref,
-                     v_weights=cage.v_weights)
+lbs = lbs_data.CageLBS3D(v_p_ref=mesh.v_p_ref,
+                         c_p=cage.c_p,
+                         c_p_ref=cage.c_p_ref,
+                         v_weights=cage.v_weights)
 wireframe = [False]
 wireframe2 = [True]
 
@@ -66,16 +68,17 @@ comp = compdyn.base.CompDynBase(v_p=mesh.v_p,
                                 c_p_ref=cage.c_p_ref,
                                 v_weights=cage.v_weights,
                                 dt=dt,
-                                alpha=1e-2,
+                                alpha=1e-3,
                                 alpha_fixed=1e-4,
-                                fixed=[0, 1, 4, 5, 2, 7])
+                                fixed=fixed)
 cage_ik = compdyn.IK.CageIK(v_p=mesh.v_p,
+                            v_p_ref=mesh.v_p_ref,
                             v_weights=cage.v_weights,
                             v_invm=mesh.v_invm,
                             c_p=cage.c_p,
                             c_p_ref=cage.c_p_ref,
                             c_p_input=cage.c_p_input,
-                            fix_trans=[0, 1, 4, 5, 2, 7])
+                            fix_trans=fixed)
 pbd.add_cons(cons_length, 0)
 pbd.add_cons(cons_bend, 0)
 pbd.add_cons(cons_volume, 0)
@@ -86,7 +89,7 @@ pbd.add_collision(ground.collision)
 
 # ========================== init interface ==========================
 window = mesh_render_3d.MeshRender3D(res=(700, 700),
-                                     title='cube_tet',
+                                     title='cube_balloon',
                                      kernel='taichi')
 window.add_render_func(ground.get_render_draw())
 window.add_render_func(
@@ -110,14 +113,13 @@ written = [False]
 
 def set_movement():
   t = window.get_time() - 1.0
-  if t < 0.0:
-    return
   p = cage.points_np
-  p_input = cage.c_p_input.to_numpy()
-  p_input[7] = p[7] + np.array([1.0, 0.0, -1.0], dtype=np.float32) * math.sin(
-      0.5 * t * (2.0 * math.pi)) * 0.35
-  p_input[2] = p[2] + np.array([-1.0, 0.0, 1.0], dtype=np.float32) * math.sin(
-      0.5 * t * (2.0 * math.pi)) * 0.35
+  p_input = np.zeros((cage_ik.n_points, 3), dtype=np.float32)
+  if t > 0.0:
+    p_input[7] = np.array([1.0, 0.3, -1.0], dtype=np.float32) * math.sin(
+        0.5 * t * (2.0 * math.pi)) * 0.35
+    p_input[2] = np.array([-1.0, 0.3, 1.0], dtype=np.float32) * math.sin(
+        0.5 * t * (2.0 * math.pi)) * 0.35
   cage.c_p_input.from_numpy(p_input)
 
   if abs(0.5 * t - 1.25) < 1e-2 and not written[0]:

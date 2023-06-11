@@ -49,6 +49,8 @@ def load_cage_data(tgfpath: str,
                    weightpath: str,
                    scale=1.0,
                    repose=(0.0, 0.0, 0.0)):
-  points, edges = io.tgf_loader(tgfpath)
+  points, bone_edges, cage_edges = io.tgf_loader(tgfpath)
+  if bone_edges.shape[0] != 0:
+    assert False, 'bone_edges should be empty'
   weights = np.loadtxt(weightpath)
-  return CageData(points, weights, edges, scale, repose)
+  return CageData(points, weights, cage_edges, scale, repose)

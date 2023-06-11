@@ -1,5 +1,5 @@
 import taichi as ti
-from data import cage_data, tet_data, cloth_data
+from data import cage_data, tet_data, cloth_data, points_data
 
 
 def get_cage_render_func(cage: cage_data.CageData,
@@ -14,14 +14,25 @@ def get_cage_render_func(cage: cage_data.CageData,
 
   def render_func(scene: ti.ui.Scene):
     if render_edges:
-      scene.lines(cage.c_p,
-                  width=edge_width,
-                  indices=cage.e_i,
-                  color=edge_color)
+      scene.lines(cage.c_p, width=edge_width, color=edge_color)
     if render_points:
       scene.particles(cage.c_p,
                       radius=point_radius,
                       per_vertex_color=cage.c_color)
+
+  return render_func
+
+
+def get_points_render_func(points: points_data.PointsData,
+                           point_color=(0.0, 1.0, 0.0),
+                           fixed_color=(1.0, 0.0, 0.0),
+                           point_radius=0.1,
+                           fixed_points=[]):
+
+  def render_func(scene: ti.ui.Scene):
+    scene.particles(points.c_p,
+                    radius=point_radius,
+                    per_vertex_color=points.c_color)
 
   return render_func
 

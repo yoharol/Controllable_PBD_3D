@@ -21,10 +21,10 @@ repose = (0.0, 0.0, 0.0)
 
 cage = cage_data.load_cage_data(tgf_path, weight_path, scale, repose)
 mesh = tet_data.load_tets(model_path, scale, repose)
-lbs = lbs_data.LBS3D(v_p_ref=mesh.v_p_ref,
-                     c_p=cage.c_p,
-                     c_p_ref=cage.c_p_ref,
-                     v_weights=cage.v_weights)
+lbs = lbs_data.CageLBS3D(v_p_ref=mesh.v_p_ref,
+                         c_p=cage.c_p,
+                         c_p_ref=cage.c_p_ref,
+                         v_weights=cage.v_weights)
 wireframe = [True]
 
 # ========================== init simulation ==========================

@@ -93,10 +93,10 @@ def set_movement():
   v_p_ref = mesh.v_p_ref.to_numpy()
 
   v_p[425] = v_p_ref[425] + np.array(
-      [1.0, 0.0, -1.0], dtype=np.float32) * math.sin(0.5 * t *
+      [1.0, 0.3, -1.0], dtype=np.float32) * math.sin(0.5 * t *
                                                      (2.0 * math.pi)) * 0.35
   v_p[167] = v_p_ref[167] + np.array(
-      [-1.0, 0.0, 1.0], dtype=np.float32) * math.sin(0.5 * t *
+      [-1.0, 0.3, 1.0], dtype=np.float32) * math.sin(0.5 * t *
                                                      (2.0 * math.pi)) * 0.35
 
   if abs(0.5 * t - 1.25) < 1e-2 and not written[0]:

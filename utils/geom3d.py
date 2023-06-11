@@ -57,3 +57,11 @@ def compute_vertex_mass(vert_pos: np.ndarray, tet_indices: np.ndarray):
     vert_mass[[p1, p2, p3, p4]] += tet_mass[i] / 4.0
     vert_order[[p1, p2, p3, p4]] += 1
   return vert_order, vert_mass, tet_mass
+
+def revert_all_faces(faces_indices:np.ndarray):
+  assert faces_indices.ndim == 1, 'faces should be 1D array'
+  n_faces = faces_indices.shape[0] // 3
+  for i in range(n_faces):
+    i1, i2 = faces_indices[i*3+1 : (i+1)*3]
+    faces_indices[i*3+1 : (i+1)*3] = i2, i1
+  return faces_indices

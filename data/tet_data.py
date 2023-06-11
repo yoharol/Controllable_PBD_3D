@@ -47,4 +47,5 @@ class TetData:
 def load_tets(tetpath: str, scale=1.0, repose=(0.0, 0.0, 0.0)):
   assert tetpath.endswith('.mesh'), 'tetpath should be .mesh file'
   verts, tets, faces = io.load_tet(tetpath)
+  faces = geom3d.revert_all_faces(faces)
   return TetData(verts, faces, tets, scale, repose)

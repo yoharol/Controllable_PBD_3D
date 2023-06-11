@@ -159,3 +159,34 @@ def get_closest_point(pos: ti.template(), x: ti.f32, y: ti.f32) -> ti.i32:
       index = i
 
   return index
+
+
+"""void extractRotation(const Matrix3d &A, Quaterniond &q,
+  const unsigned int maxIter)
+{
+  for (unsigned int iter = 0; iter < maxIter; iter++)
+  {
+    Matrix3d R = q.matrix();
+    Vector3d omega = (R.col(0).cross(A.col(0)) + R.col
+      (1).cross(A.col(1)) + R.col(2).cross(A.col(2))
+      ) * (1.0 / fabs(R.col(0).dot(A.col(0)) + R.col
+      (1).dot(A.col(1)) + R.col(2).dot(A.col(2))) +
+      1.0e-9);
+    double w = omega.norm();
+    if (w < 1.0e-9)
+    break;
+    q = Quaterniond(AngleAxisd(w, (1.0 / w) * omega)) *q;
+    q.normalize();
+  }
+}"""
+
+"""from scipy.spatial.transform import Rotation
+
+def rotation_extraction_np(A:np.ndarray, maxiter:int):
+  R = np.eye(3, dtype=np.float32)
+  for _ in range(maxiter):
+    omega = (np.cross(R[:, 0], A[:, 0]) + np.cross(R[:, 1], A[:, 1]) + np.cross(R[:, 2], A[:, 2]))* (1.0 / np.abs(np.dot(R[:, 0], A[:, 0]) + np.dot(R[:, 1], A[:, 1]) + np.dot(R[:, 2], A[:, 2])) + 1.0e-9)
+    w = np.linalg.norm(omega)
+    if w < 1.0e-9:
+      break
+    R = Rotation.from_rotvec(w) @ R"""

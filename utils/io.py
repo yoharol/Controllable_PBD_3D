@@ -27,6 +27,7 @@ def image_loader(filepath):
 def tgf_loader(filename: str):
   points = []
   cage_edges = []
+  bone_edges = []
 
   with open(filename, 'r') as f:
     lines = f.readlines()
@@ -42,5 +43,9 @@ def tgf_loader(filename: str):
       elif state == 1:
         edge_data = str.split(line, sep=' ')
         e = [int(edge_data[0]), int(edge_data[1])]
-        cage_edges.append(e)
-  return np.array(points, dtype=np.float32), np.array(cage_edges, dtype=np.int32).flatten()
+        e_type = int(edge_data[2])
+        if e_type == 1:
+          bone_edges.append(e)
+        elif e_type == 2:
+          cage_edges.append(e)
+  return np.array(points, dtype=np.float32), np.array(bone_edges, dtype=np.int32).flatten(), np.array(cage_edges, dtype=np.int32).flatten()
