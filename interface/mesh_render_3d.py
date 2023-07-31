@@ -67,6 +67,10 @@ class MeshRender3D:
   def add_cursor_event(self, button_str: str, action: str, callback_func):
     self.renderer.add_cursor_event(button_str, action.lower(), callback_func)
 
+  def set_lighting(self, point_light_pos, point_light_color, ambient_color):
+    self.renderer.set_lighting(point_light_pos, point_light_color,
+                               ambient_color)
+
   def set_wireframe_mode(self):
     self.wireframe_mode = not self.wireframe_mode
     self.renderer.set_wireframe_mode(self.wireframe_mode, self.wireframe_color)
@@ -94,6 +98,9 @@ class MeshRender3D:
 
   def get_screenshot(self, path: str):
     self.renderer.get_screen_shot(path)
+
+  def get_image(self):
+    return self.renderer.get_image()
 
 
 class TaichiRender3D:
@@ -125,6 +132,11 @@ class TaichiRender3D:
     self.camera.position(3, 3, 3)
     self.camera.lookat(0, 0, 0)
     self.camera.up(0, 1, 0)
+    print("camera info")
+    print(self.camera.z_near, self.camera.z_far, self.camera.fov)
+    self.point_light_pos = (4.0, 4.0, 4.0)
+    self.point_light_color = (0.96, 0.96, 0.96)
+    self.ambient_light_color = (0.2, 0.2, 0.2)
 
     self.render_funcs = []
 
@@ -183,10 +195,15 @@ class TaichiRender3D:
   def get_cursor_pos(self):
     return self.cursor_pos
 
+  def set_lighting(self, point_light_pos, point_light_color, ambient_color):
+    self.ambient_light_color = ambient_color
+    self.point_light_color = point_light_color
+    self.point_light_pos = point_light_pos
+
   def set_camera(self, eye, center, up):
-    self.camera.position(eye)
-    self.camera.lookat(center)
-    self.camera.up(up)
+    self.camera.position(eye[0], eye[1], eye[2])
+    self.camera.lookat(center[0], center[1], center[2])
+    self.camera.up(up[0], up[1], up[2])
 
   def add_render_func(self, render_func):
     self.render_funcs.append(render_func)
@@ -195,13 +212,17 @@ class TaichiRender3D:
     self.background_color = (color[0], color[1], color[2])
 
   def render(self):
-
+    self.canvas.set_background_color(self.background_color)
     self.scene.set_camera(self.camera)
-    self.scene.ambient_light((0.2, 0.2, 0.2))
-    self.scene.point_light(pos=(4.0, 4.0, 4.0), color=(0.96, 0.96, 0.96))
+    self.scene.ambient_light(self.ambient_light_color)
+    self.scene.point_light(pos=self.point_light_pos,
+                           color=self.point_light_color)
 
     for func in self.render_funcs:
       func(self.scene)
+
+  def get_image(self):
+    return self.window.get_image_buffer_as_numpy()
 
   def show(self):
     self.canvas.scene(self.scene)

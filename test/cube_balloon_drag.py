@@ -27,6 +27,14 @@ corres = [32, 183, 167, 244, 186, 94, 197, 425]
 invm = mesh.v_invm.to_numpy()
 invm[fixed] = 0.0
 mesh.v_invm.from_numpy(invm)
+display_points = ti.Vector.field(3, dtype=ti.f32, shape=len(fixed))
+
+
+def update_display_points():
+  for i in range(len(fixed)):
+    for k in range(3):
+      display_points[i][k] = mesh.v_p[fixed[i]][k]
+
 
 wireframe = [False]
 
@@ -66,15 +74,19 @@ ground = objs.Quad(axis1=(10.0, 0.0, 0.0), axis2=(0.0, 0.0, -10.0), pos=0.0)
 pbd.add_collision(ground.collision)
 
 # ========================== init interface ==========================
-window = mesh_render_3d.MeshRender3D(res=(700, 700),
-                                     title='cube_tet',
+window = mesh_render_3d.MeshRender3D(res=(1000, 1000),
+                                     title='cube_balloon_drag',
                                      kernel='taichi')
-window.add_render_func(ground.get_render_draw())
+# window.add_render_func(ground.get_render_draw())
 window.add_render_func(
     render_funcs.get_mesh_render_func(mesh.v_p,
                                       mesh.f_i,
                                       wireframe,
-                                      color=(1.0, 1.0, 1.0)))
+                                      color=(14 / 255, 87 / 255, 204 / 255)))
+window.add_render_func(
+    render_funcs.get_particles_render_func(display_points,
+                                           color=(1.0, 0.0, 0.0),
+                                           radius=0.04))
 
 # ========================== init status ==========================
 pbd.init_rest_status(0)
@@ -110,11 +122,11 @@ def set_movement():
 
 
 # ========================== USD ==========================
-save_usd = False
+save_usd = True
 if save_usd:
   stage = usd_render.UsdRender('out/cube_balloon_drag.usdc',
                                startTimeCode=1,
-                               endTimeCode=240,
+                               endTimeCode=600,
                                fps=60,
                                UpAxis='Y')
   cage_point_color = np.zeros((len(fixed), 3), dtype=np.float32)
@@ -132,6 +144,7 @@ if save_usd:
       return
     usd_cage_points.update(mesh.v_p.to_numpy()[fixed], frame)
     usd_mesh.update(mesh.v_p.to_numpy(), frame)
+    print("update usd file at frame", frame)
 
 
 t_total = 0.0
@@ -150,6 +163,8 @@ while window.running():
   t_total += time.time() - t
   if window.get_total_frames() == 480:
     print(f'average time: {t_total / 480}')
+
+  update_display_points()
 
   if save_usd:
     update_usd(window.get_total_frames())

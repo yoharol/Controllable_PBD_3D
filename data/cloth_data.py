@@ -1,7 +1,7 @@
 import taichi as ti
 import numpy as np
 
-from utils import geom2d
+from utils import geom2d, geom3d
 from utils import io
 
 
@@ -54,11 +54,14 @@ class ClothData:
 def load_cloth_mesh(meshpath: str,
                     scale=1.0,
                     repose=(0.0, 0.0, 0.0),
-                    doublesided=True):
+                    remove_duplicate=True,
+                    reverse_side=False):
   assert meshpath.endswith('.obj'), 'Only support .obj file'
   verts, faces = io.load_obj(meshpath)
-  if doublesided:
-    faces = faces.reshape(-1, 3)
+  if remove_duplicate:
+    faces = faces.reshape((-1, 3))
     faces = faces[::2]
-    faces = faces.reshape(-1)
+    faces = faces.reshape((-1))
+  if reverse_side:
+    geom3d.revert_all_faces(faces)
   return ClothData(verts, faces, scale, repose)

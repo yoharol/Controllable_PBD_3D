@@ -90,7 +90,6 @@ class CageIK:
       self.c_p[i] = self.c_p[i] + self.c_p_ref[i]
 
 
-@ti.data_oriented
 class PointsIK:
 
   def __init__(self,
@@ -185,19 +184,3 @@ class PointsIK:
       A = t[j * 4:(j + 1) * 4, :].T
       R, S = linalg.polar(A)
       self.T[j * 4:(j + 1) * 4, :] = R.T
-
-  @ti.kernel
-  def update_after_solver(self):
-    for j in range(self.n_points):
-      self.c_A[j] = ti.Matrix([[
-          self.T_ti[4 * j, 0], self.T_ti[4 * j + 1, 0], self.T_ti[4 * j + 2, 0]
-      ], [
-          self.T_ti[4 * j, 1], self.T_ti[4 * j + 1, 1], self.T_ti[4 * j + 2, 1]
-      ], [
-          self.T_ti[4 * j, 2], self.T_ti[4 * j + 1, 2], self.T_ti[4 * j + 2, 2]
-      ]])
-      self.c_b[j] = ti.Vector([
-          self.T_ti[4 * j + 3, 0], self.T_ti[4 * j + 3, 1], self.T_ti[4 * j + 3,
-                                                                      2]
-      ])
-      self.c_p[j] = self.c_A[j] @ self.c_p_ref[j] + self.c_b[j]

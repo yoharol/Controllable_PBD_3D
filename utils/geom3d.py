@@ -65,3 +65,26 @@ def revert_all_faces(faces_indices:np.ndarray):
     i1, i2 = faces_indices[i*3+1 : (i+1)*3]
     faces_indices[i*3+1 : (i+1)*3] = i2, i1
   return faces_indices
+
+def extract_surface(verts_np:np.ndarray, faces_np:np.ndarray):
+  vert_idx = []
+  assert faces_np.ndim == 1, 'faces should be 1D array'
+  n_verts = verts_np.shape[0]
+  n_faces = faces_np.shape[0] // 3
+  corres_idx = np.zeros(n_verts, dtype=np.int32)
+  corres_idx[:] = -1
+  for i in range(n_faces):
+    for j in range(3):
+      idx = faces_np[i * 3 + j]
+      if idx not in vert_idx:
+        vert_idx.append(idx)
+        corres_idx[idx] = len(vert_idx) - 1
+
+  face_idx = np.zeros_like(faces_np)
+  for i in range(n_faces):
+    for j in range(3):
+      face_idx[i * 3 + j] = corres_idx[faces_np[i * 3 + j]]
+      assert face_idx[i * 3 + j] != -1
+
+  n_surface_verts = len(vert_idx)
+  return n_surface_verts, vert_idx, face_idx, corres_idx

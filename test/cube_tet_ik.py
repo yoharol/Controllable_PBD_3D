@@ -28,7 +28,7 @@ lbs = lbs_data.CageLBS3D(v_p_ref=mesh.v_p_ref,
                          c_p=cage.c_p,
                          c_p_ref=cage.c_p_ref,
                          v_weights=cage.v_weights)
-wireframe = [True]
+wireframe = [False]
 
 # ========================== init simulation ==========================
 g = ti.Vector([0.0, 0.0, 0.0])
@@ -72,19 +72,23 @@ ground = objs.Quad(axis1=(10.0, 0.0, 0.0), axis2=(0.0, 0.0, -10.0), pos=0.0)
 pbd.add_collision(ground.collision)
 
 # ========================== init interface ==========================
-window = mesh_render_3d.MeshRender3D(res=(700, 700),
+window = mesh_render_3d.MeshRender3D(res=(1000, 1000),
                                      title='cube_tet',
                                      kernel='taichi')
-window.add_render_func(ground.get_render_draw())
+# window.add_render_func(ground.get_render_draw())
 window.add_render_func(
     render_funcs.get_mesh_render_func(mesh.v_p,
                                       mesh.f_i,
                                       wireframe,
-                                      color=(1.0, 1.0, 1.0)))
+                                      color=(14 / 255, 87 / 255, 204 / 255)))
 """window.add_render_func(render_func=render_funcs.get_mesh_render_func(
     lbs.v_p_rig, mesh.f_i, wireframe, color=(0.0, 1.0, 0.0)))"""
 window.add_render_func(
-    render_funcs.get_cage_render_func(cage, point_radius=0.04, edge_width=1.0))
+    render_funcs.get_cage_render_func(cage,
+                                      point_radius=0.04,
+                                      edge_width=8.0,
+                                      edge_color=(255 / 255, 145 / 255,
+                                                  0 / 255)))
 
 # ========================== init status ==========================
 pbd.init_rest_status(0)
@@ -92,7 +96,7 @@ pbd.init_rest_status(0)
 # ========================== use input ==========================
 import math
 
-written = [True]
+written = [False]
 
 
 def set_movement():
@@ -105,6 +109,7 @@ def set_movement():
     p_input[2] = np.array([-1.0, 0.3, 1.0], dtype=np.float32) * math.sin(
         0.5 * t * (2.0 * math.pi)) * 0.35
   cage.c_p_input.from_numpy(p_input)
+
   if abs(0.5 * t - 1.25) < 1e-2 and not written[0]:
     import meshio
     meshio.Mesh(
@@ -116,28 +121,40 @@ def set_movement():
 
 
 # ========================== USD ==========================
-save_usd = False
+save_usd = True
 if save_usd:
   stage = usd_render.UsdRender('out/cube_tet.usdc',
                                startTimeCode=1,
-                               endTimeCode=240,
+                               endTimeCode=600,
                                fps=60,
                                UpAxis='Y')
-  cage_point_color = np.zeros((len(fixed), 3), dtype=np.float32)
-  cage_point_color[:] = np.array([1.0, 0.0, 0.0], dtype=np.float32)
+  cage_point_color = np.zeros((cage.n_points, 3), dtype=np.float32)
+  cage_point_color[:] = np.array([0.0, 1.0, 0.0], dtype=np.float32)
+  cage_point_color[comp.fixed] = np.array([1.0, 0.0, 0.0], dtype=np.float32)
   usd_cage_points = usd_objs.SavePoints(stage.stage,
                                         '/root/cage_points',
-                                        verts_np=mesh.v_p.to_numpy()[fixed],
+                                        verts_np=cage.c_p.to_numpy(),
                                         radius=0.05,
                                         per_vert_color=cage_point_color)
-  usd_mesh = usd_objs.SaveMesh(stage.stage, '/root/mesh', mesh.verts_np,
-                               mesh.faces_np)
+  usd_cage_lines = usd_objs.SaveLines(stage.stage,
+                                      '/root/cage_lines',
+                                      verts_np=cage.c_p.to_numpy(),
+                                      edges_np=cage.e_i.to_numpy(),
+                                      width=0.025,
+                                      color=(0.0, 1.0, 1.0))
+  mesh.update_surface_verts()
+  usd_mesh = usd_objs.SaveMesh(stage.stage, '/root/mesh',
+                               mesh.surface_v_p.to_numpy(),
+                               mesh.surface_f_i.to_numpy())
 
   def update_usd(frame: int):
     if frame < stage.startTimeCode or frame > stage.endTimeCode:
       return
-    usd_cage_points.update(mesh.v_p.to_numpy()[fixed], frame)
-    usd_mesh.update(mesh.v_p.to_numpy(), frame)
+    usd_cage_points.update(cage.c_p.to_numpy(), frame)
+    usd_cage_lines.update(cage.c_p.to_numpy(), frame)
+    mesh.update_surface_verts()
+    usd_mesh.update(mesh.surface_v_p.to_numpy(), frame)
+    print("update usd file at frame", frame)
 
 
 t_total = 0.0

@@ -88,19 +88,24 @@ ground = objs.Quad(axis1=(10.0, 0.0, 0.0), axis2=(0.0, 0.0, -10.0), pos=0.0)
 pbd.add_collision(ground.collision)
 
 # ========================== init interface ==========================
-window = mesh_render_3d.MeshRender3D(res=(700, 700),
+window = mesh_render_3d.MeshRender3D(res=(1000, 1000),
                                      title='cube_balloon',
                                      kernel='taichi')
-window.add_render_func(ground.get_render_draw())
+window.set_background_color((1, 1, 1, 1))
+# window.add_render_func(ground.get_render_draw())
 window.add_render_func(
     render_funcs.get_mesh_render_func(mesh.v_p,
                                       mesh.f_i,
                                       wireframe,
-                                      color=(0 / 255, 196 / 255, 1.0)))
+                                      color=(14 / 255, 87 / 255, 204 / 255)))
 """window.add_render_func(render_func=render_funcs.get_mesh_render_func(
     lbs.v_p_rig, mesh.f_i, wireframe, color=(0.0, 1.0, 0.0)))"""
 window.add_render_func(
-    render_funcs.get_cage_render_func(cage, point_radius=0.04, edge_width=1.0))
+    render_funcs.get_cage_render_func(cage,
+                                      point_radius=0.04,
+                                      edge_width=8.0,
+                                      edge_color=(255 / 255, 145 / 255,
+                                                  0 / 255)))
 
 # ========================== init status ==========================
 pbd.init_rest_status(0)
@@ -108,7 +113,7 @@ pbd.init_rest_status(0)
 # ========================== user input ==========================
 import math
 
-written = [True]
+written = [False]
 
 
 def set_movement():
@@ -132,16 +137,16 @@ def set_movement():
 
 
 # ========================== USD ==========================
-save_usd = False
+save_usd = True
 if save_usd:
   stage = usd_render.UsdRender('out/cube_balloon.usdc',
                                startTimeCode=1,
-                               endTimeCode=240,
+                               endTimeCode=600,
                                fps=60,
                                UpAxis='Y')
   cage_point_color = np.zeros((cage.n_points, 3), dtype=np.float32)
-  cage_point_color[:] = np.array([1.0, 0.0, 0.0], dtype=np.float32)
-  cage_point_color[comp.fixed] = np.array([0.0, 1.0, 0.0], dtype=np.float32)
+  cage_point_color[:] = np.array([0.0, 1.0, 0.0], dtype=np.float32)
+  cage_point_color[comp.fixed] = np.array([1.0, 0.0, 0.0], dtype=np.float32)
   usd_cage_points = usd_objs.SavePoints(stage.stage,
                                         '/root/cage_points',
                                         verts_np=cage.c_p.to_numpy(),
@@ -162,6 +167,7 @@ if save_usd:
     usd_cage_points.update(cage.c_p.to_numpy(), frame)
     usd_cage_edges.update(cage.c_p.to_numpy(), frame)
     usd_mesh.update(mesh.v_p.to_numpy(), frame)
+    print("update usd file at frame", frame)
 
 
 t_total = 0.0

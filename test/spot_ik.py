@@ -21,7 +21,7 @@ repose = (0.0, 1.7, 0.0)
 
 points = points_data.load_points_data(tgf_path, weight_path, scale, repose)
 mesh = tet_data.load_tets(model_path, scale, repose)
-wireframe = [True]
+wireframe = [False]
 fixed = []
 points.set_color(fixed=fixed)
 

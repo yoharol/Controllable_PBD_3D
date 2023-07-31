@@ -12,6 +12,7 @@ class SaveMesh:
                faces_np: np.ndarray,
                two_sided=False,
                color=(1.0, 1.0, 1.0)) -> None:
+    assert faces_np.ndim == 1, 'faces should be 1D array'
     self.stage = stage
     self.geom = UsdGeom.Mesh.Define(stage, prim_path)
     self.geom.GetPointsAttr().Set(verts_np)
@@ -35,6 +36,7 @@ class SaveLines:
                color=(1.0, 1.0, 1.0)) -> None:
     self.lines = []
     self.edges = edges_np.reshape((-1, 2))
+    print(self.edges)
     self.n_edges = self.edges.shape[0]
     self.width = width
     self.xform = UsdGeom.Xform.Define(stage, prim_path)

@@ -8,12 +8,14 @@ def load_obj(filename: str):
   faces = mesh.cells_dict['triangle']
   return verts, faces.flatten()
 
-def load_tet(filename: str):
+def load_tet(filename: str, reverse_face=False):
   mesh = meshio.read(filename)
   verts = mesh.points
   assert 'tetra' in mesh.cells_dict, 'only tetra mesh is supported'
   tets = mesh.cells_dict['tetra']
   faces = mesh.cells_dict['triangle']
+  if reverse_face:
+    faces = np.flip(faces, 1)
   return verts, tets.flatten(), faces.flatten()
 
 def image_loader(filepath):
