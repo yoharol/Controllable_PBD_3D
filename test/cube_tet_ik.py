@@ -46,17 +46,17 @@ deform = deform3d.Deform3D(v_p=mesh.v_p,
                            dt=dt,
                            hydro_alpha=1e-2,
                            devia_alpha=5e-2)
-comp = compdyn.base.CompDynBase(v_p=mesh.v_p,
-                                v_p_ref=mesh.v_p_ref,
-                                v_p_rig=lbs.v_p_rig,
-                                v_invm=mesh.v_invm,
-                                c_p=cage.c_p,
-                                c_p_ref=cage.c_p_ref,
-                                v_weights=cage.v_weights,
-                                dt=dt,
-                                alpha=1e-3,
-                                alpha_fixed=1e-4,
-                                fixed=fixed)
+comp = compdyn.base.CompDynMomentum(v_p=mesh.v_p,
+                                    v_p_ref=mesh.v_p_ref,
+                                    v_p_rig=lbs.v_p_rig,
+                                    v_invm=mesh.v_invm,
+                                    c_p=cage.c_p,
+                                    c_p_ref=cage.c_p_ref,
+                                    v_weights=cage.v_weights,
+                                    dt=dt,
+                                    alpha=5e-4,
+                                    alpha_fixed=1e-4,
+                                    fixed=fixed)
 cage_ik = compdyn.IK.CageIK(v_p=mesh.v_p,
                             v_p_ref=mesh.v_p_ref,
                             v_weights=cage.v_weights,
@@ -92,6 +92,7 @@ window.add_render_func(
 
 # ========================== init status ==========================
 pbd.init_rest_status(0)
+pbd.init_rest_status(1)
 
 # ========================== use input ==========================
 import math

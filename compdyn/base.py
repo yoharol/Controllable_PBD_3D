@@ -1,6 +1,7 @@
 import taichi as ti
 import numpy as np
 
+
 # Linear Blend Skinning
 @ti.data_oriented
 class CompDynBase:
@@ -61,7 +62,6 @@ class CompDynBase:
         m = 1.0 / self.v_invm[i]
         w = self.weights[i, j]
         self.sum_deriv_cache[j] += m * w * w
-  
 
   @ti.kernel
   def solve_cons(self):
@@ -99,6 +99,7 @@ class CompDynBase:
         delta_x += self.delta_lambda[j, 2] * w * ti.Vector([0.0, 0.0, 1.0])
       self.v_p[i] += delta_x
 
+
 # Linear Blend Skinning
 @ti.data_oriented
 class CompDynMomentum:
@@ -135,7 +136,7 @@ class CompDynMomentum:
     self.alpha_list = ti.field(dtype=ti.f32, shape=(self.n_controls))
     self.sum_deriv = ti.field(dtype=ti.f32, shape=(self.n_controls, 3))
     self.sum_deriv_cache = ti.field(dtype=ti.f32, shape=(self.n_controls))
-  
+
     self.is_fixed = ti.field(dtype=ti.i32, shape=(self.n_controls))
     self.mass_center = ti.Vector.field(self.v_p.n, dtype=ti.f32, shape=())
     if self.n_fixed > 0:
@@ -144,7 +145,8 @@ class CompDynMomentum:
       print("fixed idx", self.fix_idx)
 
     if self.n_free > 0:
-      self.free_idx = ti.field(dtype=ti.i32, shape=(self.n_controls - self.n_fixed))
+      self.free_idx = ti.field(dtype=ti.i32,
+                               shape=(self.n_controls - self.n_fixed))
       self.free_weight = ti.field(dtype=ti.f32, shape=(self.n_vert))
       self.momentum_deriv_sum = ti.field(dtype=ti.f32, shape=())
 
@@ -163,8 +165,6 @@ class CompDynMomentum:
         if self.is_fixed[i] == 0:
           free_list.append(i)
       self.free_idx.from_numpy(np.array(free_list, dtype=np.int32))
-      print("free idx", self.free_idx)
-  
 
   def init_rest_status(self):
     self.compute_deriv_sum()
@@ -175,14 +175,13 @@ class CompDynMomentum:
   def update_cons(self):
     self.C.fill(0.0)
     self.sum_deriv.fill(0.0)
-    if self.n_fixed > 0: 
+    if self.n_fixed > 0:
       self.solve_cons_fix()
     if self.n_free > 0:
-      # self.compute_mass_center()
+      self.compute_mass_center()
       self.solve_cons_free()
-      # self.fix_mass_center()
+      self.fix_mass_center()
 
-  
   @ti.kernel
   def compute_mass_center(self):
     mass_center = ti.Vector.zero(ti.f32, self.v_p.n)
@@ -192,7 +191,7 @@ class CompDynMomentum:
       w = self.free_weight[i]
       mass_center += m * w * self.v_p[i]
     self.mass_center[None] = mass_center
-  
+
   @ti.kernel
   def fix_mass_center(self):
     new_mass_center = ti.Vector.zero(ti.f32, self.v_p.n)
@@ -204,8 +203,7 @@ class CompDynMomentum:
     delta = new_mass_center - self.mass_center[None]
     for i in range(self.n_vert):
       w = self.free_weight[i]
-      self.v_p[i] += - w * delta / self.momentum_deriv_sum[None]
-
+      self.v_p[i] += -w * delta / self.momentum_deriv_sum[None]
 
   @ti.kernel
   def compute_deriv_sum(self):
@@ -226,7 +224,7 @@ class CompDynMomentum:
       m = 1.0 / self.v_invm[i]
       w = self.free_weight[i]
       self.momentum_deriv_sum[None] += m * w * w
-  
+
   @ti.kernel
   def solve_cons_fix(self):
     ti.loop_config(serialize=True)
@@ -241,7 +239,8 @@ class CompDynMomentum:
         self.C[j, 2] += m * w * x_c[2]
 
     ti.loop_config(serialize=True)
-    for i in self.fix_idx:
+    for idx in range(self.n_fixed):
+      i = self.fix_idx[idx]
       self.sum_deriv[i, 0] = self.sum_deriv_cache[i]
       self.sum_deriv[i, 1] = self.sum_deriv_cache[i]
       self.sum_deriv[i, 2] = self.sum_deriv_cache[i]
@@ -262,7 +261,7 @@ class CompDynMomentum:
         delta_x += self.delta_lambda[j, 1] * w * ti.Vector([0.0, 1.0, 0.0])
         delta_x += self.delta_lambda[j, 2] * w * ti.Vector([0.0, 0.0, 1.0])
       self.v_p[i] += delta_x
-  
+
   @ti.kernel
   def solve_cons_free(self):
 
@@ -278,7 +277,8 @@ class CompDynMomentum:
         self.C[j, 2] += m * w * x_c[2]
 
     ti.loop_config(serialize=True)
-    for i in self.free_idx:
+    for idx in range(self.n_free):
+      i = self.free_idx[idx]
       self.sum_deriv[i, 0] = self.sum_deriv_cache[i]
       self.sum_deriv[i, 1] = self.sum_deriv_cache[i]
       self.sum_deriv[i, 2] = self.sum_deriv_cache[i]
