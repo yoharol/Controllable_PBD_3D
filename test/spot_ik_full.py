@@ -85,6 +85,7 @@ window.add_render_func(
 
 # ========================== init status ==========================
 pbd.init_rest_status(0)
+pbd.init_rest_status(1)
 
 # ========================== use input ==========================
 import math

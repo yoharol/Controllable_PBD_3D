@@ -50,7 +50,7 @@ points_ik = compdyn.IK.PointsIK(v_p=mesh.v_p,
                                 c_p_ref=points.c_p_ref,
                                 c_p_input=points.c_p_input,
                                 fix_trans=fixed)
-comp = compdyn.base.CompDynBase(v_p=mesh.v_p,
+comp = compdyn.base.CompDynMomentum(v_p=mesh.v_p,
                                 v_p_ref=mesh.v_p_ref,
                                 v_p_rig=points_ik.v_p_rig,
                                 v_invm=mesh.v_invm,
@@ -87,6 +87,7 @@ window.add_render_func(
 
 # ========================== init status ==========================
 pbd.init_rest_status(0)
+pbd.init_rest_status(1)
 
 # ========================== usd rneder ==========================
 save_usd = False

@@ -49,19 +49,8 @@ points_ik = compdyn.IK.PointsIK(v_p=mesh.v_p,
                                 c_p_ref=points.c_p_ref,
                                 c_p_input=points.c_p_input,
                                 fix_trans=fixed)
-comp = compdyn.base.CompDynBase(v_p=mesh.v_p,
-                                v_p_ref=mesh.v_p_ref,
-                                v_p_rig=points_ik.v_p_rig,
-                                v_invm=mesh.v_invm,
-                                c_p=points.c_p,
-                                c_p_ref=points.c_p_ref,
-                                v_weights=points.v_weights,
-                                dt=dt,
-                                alpha=1e-4,
-                                alpha_fixed=1e-5,
-                                fixed=fixed)
+
 pbd.add_cons(deform, 0)
-pbd.add_cons(comp, 1)
 
 ground = objs.Quad(axis1=(10.0, 0.0, 0.0), axis2=(0.0, 0.0, -10.0), pos=0.0)
 pbd.add_collision(ground.collision)
@@ -83,7 +72,6 @@ window.add_render_func(
 
 # ========================== init status ==========================
 pbd.init_rest_status(0)
-pbd.init_rest_status(1)
 
 # ========================== use input ==========================
 import math
@@ -110,12 +98,10 @@ while window.running():
   for i in range(substeps):
     pbd.make_prediction()
     pbd.preupdate_cons(0)
-    pbd.preupdate_cons(1)
     for j in range(subsub):
       pbd.update_cons(0)
     t = time.time()
     points_ik.ik()
-    pbd.update_cons(1)
     t_total += time.time() - t
     pbd.update_vel()
 
