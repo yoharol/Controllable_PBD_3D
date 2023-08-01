@@ -12,6 +12,7 @@ class CompDynPoint:
                v_invm: ti.Field,
                c_p: ti.MatrixField,
                c_p_ref: ti.MatrixField,
+               c_rot: ti.MatrixField,
                v_weights: ti.Field,
                dt,
                alpha=0.0,
@@ -26,14 +27,15 @@ class CompDynPoint:
     self.n_controls = c_p.shape[0]
     self.c_p = c_p
     self.c_p_ref = c_p_ref
+    self.c_rot = c_rot
     self.weights = v_weights
-    self.lambdaf = ti.field(dtype=ti.f32, shape=(self.n_controls, 3))
-    self.C = ti.field(dtype=ti.f32, shape=(self.n_controls, 3))
-    self.delta_lambda = ti.field(dtype=ti.f32, shape=(self.n_controls, 3))
+    self.lambdaf = ti.field(dtype=ti.f32, shape=(self.n_controls, 6))
+    self.C = ti.field(dtype=ti.f32, shape=(self.n_controls, 6))
+    self.delta_lambda = ti.field(dtype=ti.f32, shape=(self.n_controls, 6))
     self.alpha = alpha / (dt * dt)
     self.alpha_fixed = alpha_fixed / (dt * dt)
     self.alpha_list = ti.field(dtype=ti.f32, shape=(self.n_controls))
-    self.sum_deriv = ti.field(dtype=ti.f32, shape=(self.n_controls, 3))
+    self.sum_deriv = ti.field(dtype=ti.f32, shape=(self.n_controls, 6))
     self.sum_deriv_cache = ti.field(dtype=ti.f32, shape=(self.n_controls))
 
     self.set_fixed(fixed)
@@ -73,9 +75,17 @@ class CompDynPoint:
       for j in range(self.n_controls):
         m = 1.0 / self.v_invm[i]
         w = self.weights[i, j]
+        x = self.c_rot[j] @ (self.v_p_ref[i] - self.c_p_ref[j])
         self.C[j, 0] += m * w * x_c[0]
         self.C[j, 1] += m * w * x_c[1]
         self.C[j, 2] += m * w * x_c[2]
+        self.C[j, 3] += m * w * x_c.dot(ti.Vector([0.0, x[2], -x[1]]))
+        self.C[j, 4] += m * w * x_c.dot(ti.Vector([-x[2], 0.0, x[0]]))
+        self.C[j, 5] += m * w * x_c.dot(ti.Vector([x[1], -x[0], 0.0]))
+        x = x * x
+        self.sum_deriv[j, 3] += m * w * w * (x[2] + x[1])
+        self.sum_deriv[j, 4] += m * w * w * (x[2] + x[0])
+        self.sum_deriv[j, 5] += m * w * w * (x[1] + x[0])
 
     ti.loop_config(serialize=True)
     for i in range(self.n_controls):
@@ -96,4 +106,8 @@ class CompDynPoint:
         delta_x += self.delta_lambda[j, 0] * w * ti.Vector([1.0, 0.0, 0.0])
         delta_x += self.delta_lambda[j, 1] * w * ti.Vector([0.0, 1.0, 0.0])
         delta_x += self.delta_lambda[j, 2] * w * ti.Vector([0.0, 0.0, 1.0])
+        x = self.c_rot[j] @ (self.v_p_ref[i] - self.c_p_ref[j])
+        delta_x += self.delta_lambda[j, 3] * w * ti.Vector([0.0, x[2], -x[1]])
+        delta_x += self.delta_lambda[j, 4] * w * ti.Vector([-x[2], 0.0, x[0]])
+        delta_x += self.delta_lambda[j, 5] * w * ti.Vector([x[1], -x[0], 0.0])
       self.v_p[i] += delta_x

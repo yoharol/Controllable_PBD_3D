@@ -90,6 +90,7 @@ class CageIK:
       self.c_p[i] = self.c_p[i] + self.c_p_ref[i]
 
 
+@ti.data_oriented
 class PointsIK:
 
   def __init__(self,
@@ -110,14 +111,17 @@ class PointsIK:
     self.v_invm = v_invm
     self.c_p = c_p
     self.c_p_ref = c_p_ref
+    self.c_p_ref_np = c_p_ref.to_numpy()
     self.c_p_input = c_p_input
     self.n_fixed = 0
 
     self.c_b = ti.Vector.field(3, dtype=ti.f32, shape=self.n_points)
+    self.c_rot = ti.Matrix.field(3, 3, dtype=ti.f32, shape=self.n_points)
     self.M = np.zeros(dtype=np.float32, shape=(self.n_verts, self.n_verts))
     self.W = np.zeros(dtype=np.float32, shape=(self.n_verts, self.n_points * 4))
     self.T = np.zeros(dtype=np.float32, shape=(self.n_points * 4, 3))
     self.T_ti = ti.field(dtype=ti.f32, shape=(self.n_points * 4, 3))
+    self.X_hat = np.zeros(dtype=np.float32, shape=(self.n_verts, 3))
     self.c_p_ref_W = np.zeros(dtype=np.float32,
                               shape=(self.n_points, self.n_points * 4))
 
@@ -132,16 +136,17 @@ class PointsIK:
     for i in range(self.n_verts):
       for j in range(self.n_points):
         w = self.v_weights[i, j]
-        self.W[i, j * 4] = w * self.v_p_ref[i][0]
-        self.W[i, j * 4 + 1] = w * self.v_p_ref[i][1]
-        self.W[i, j * 4 + 2] = w * self.v_p_ref[i][2]
+        self.W[i, j * 4] = w * (self.v_p_ref[i][0] - self.c_p_ref[j][0])
+        self.W[i, j * 4 + 1] = w * (self.v_p_ref[i][1] - self.c_p_ref[j][1])
+        self.W[i, j * 4 + 2] = w * (self.v_p_ref[i][2] - self.c_p_ref[j][2])
         self.W[i, j * 4 + 3] = w
+        self.X_hat[i] += w * self.c_p_ref_np[j]
     self.LHS = self.W.T @ self.M @ self.W
     self.WTM = self.W.T @ self.M
 
     c_p_ref_np = self.c_p_ref.to_numpy()
     for j in range(self.n_points):
-      self.c_p_ref_W[j, j * 4:j * 4 + 3] = c_p_ref_np[j]
+      self.c_p_ref_W[j, j * 4:j * 4 + 3] = 0.0
       self.c_p_ref_W[j, j * 4 + 3] = 1.0
 
   def set_fixedpoint(self, fix_trans):
@@ -151,9 +156,9 @@ class PointsIK:
       cons_list = []
       for ft in fix_trans:
         G = np.zeros(dtype=np.float32, shape=(1, self.n_points * 4))
-        G[0, ft * 4] = self.c_p_ref[ft][0]
-        G[0, ft * 4 + 1] = self.c_p_ref[ft][1]
-        G[0, ft * 4 + 2] = self.c_p_ref[ft][2]
+        G[0, ft * 4] = 0.0
+        G[0, ft * 4 + 1] = 0.0
+        G[0, ft * 4 + 2] = 0.0
         G[0, ft * 4 + 3] = 1.0
         cons_list.append(G)
       G = np.vstack(cons_list)
@@ -162,25 +167,41 @@ class PointsIK:
     self.LHS_inv = linalg.inv(self.LHS)
 
   def ik(self):
-    RHS = self.WTM @ self.v_p.to_numpy()
+    RHS = self.WTM @ (self.v_p.to_numpy() - self.X_hat)
     if self.n_fixed > 0:
       RHS = np.vstack([RHS, np.zeros((self.n_fixed, 3))])
       n_ft = len(self.fix_trans)
       for ft_idx in range(n_ft):
         idx = self.fix_trans[ft_idx]
-        RHS[self.n_points * 4 + ft_idx, 0] = self.c_p_input[idx][0]
-        RHS[self.n_points * 4 + ft_idx, 1] = self.c_p_input[idx][1]
-        RHS[self.n_points * 4 + ft_idx, 2] = self.c_p_input[idx][2]
+        RHS[self.n_points * 4 + ft_idx,
+            0] = self.c_p_input[idx][0] - self.c_p_ref[idx][0]
+        RHS[self.n_points * 4 + ft_idx,
+            1] = self.c_p_input[idx][1] - self.c_p_ref[idx][1]
+        RHS[self.n_points * 4 + ft_idx,
+            2] = self.c_p_input[idx][2] - self.c_p_ref[idx][2]
     t = self.LHS_inv @ RHS
     t = t[:self.n_points * 4, :]
-    # self.T_ti.from_numpy(t)
-    # self.update_after_solver()
+    self.T_ti.from_numpy(t)
     self.polar_decompose(t)
-    self.v_p_rig.from_numpy(self.W @ t)
-    self.c_p.from_numpy(self.c_p_ref_W @ t)
+    self.v_p_rig.from_numpy(self.W @ t + self.X_hat)
+    self.c_p.from_numpy(self.c_p_ref_W @ t + self.c_p_ref_np)
 
   def polar_decompose(self, t: np.ndarray):
+    rot = np.zeros(dtype=np.float32, shape=(self.n_points, 3, 3))
+    trans = np.zeros(dtype=np.float32, shape=(self.n_points, 3))
     for j in range(self.n_points):
-      A = t[j * 4:(j + 1) * 4, :].T
+      A = t[j * 4:(j + 1) * 4 - 1, :].T
       R, S = linalg.polar(A)
-      self.T[j * 4:(j + 1) * 4, :] = R.T
+      rot[j] = R
+      trans[j] = t[(j + 1) * 4 - 1, :]
+      self.T[j * 4:(j + 1) * 4 - 1, :] = R.T
+    self.c_b.from_numpy(trans)
+    self.c_rot.from_numpy(rot)
+
+  @ti.kernel
+  def lbs(self):
+    for i in range(self.n_verts):
+      self.v_p_rig[i] = ti.Vector.zero(ti.f32, 3)
+      for j in range(self.n_points):
+        self.v_p_rig[i] += self.v_weights[i, j] * (
+            self.c_rot[j] @ (self.v_p[i] - self.c_p_ref[j]) + self.c_p[j])

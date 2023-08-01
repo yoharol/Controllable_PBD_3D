@@ -60,8 +60,13 @@ window = mesh_render_3d.MeshRender3D(res=(700, 700),
                                      title='cube_tet',
                                      kernel='taichi')
 window.add_render_func(ground.get_render_draw())
-window.add_render_func(
+"""window.add_render_func(
     render_funcs.get_mesh_render_func(mesh.v_p,
+                                      mesh.f_i,
+                                      wireframe,
+                                      color=(1.0, 1.0, 1.0)))"""
+window.add_render_func(
+    render_funcs.get_mesh_render_func(points_ik.v_p_rig,
                                       mesh.f_i,
                                       wireframe,
                                       color=(1.0, 1.0, 1.0)))
